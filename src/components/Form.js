@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import Groups from './Groups';
 class Form extends Component{
     constructor(){
         super();
@@ -15,13 +16,19 @@ class Form extends Component{
             groupType: "",
             meetingDate: "",
             zipCode: "",
+            filtered: [],
+            changed: false,
 
         }
         this.handleChange = this.handleChange.bind(this);
     }
+    //Handles select dropdown changes by updating state
     handleChange(e){
         const {name, value} = e.target;
         this.setState({[name]: value});
+        this.setState(prevState => ({
+            changed: !prevState.changed
+          }));
     }
     componentDidMount(){
         let campuses = ["View All"];
@@ -30,6 +37,7 @@ class Form extends Component{
         let meetings = ["View All"];
         let zipCodes = ["View All"];
         const url = `http://159.122.174.181:31217/groups`;
+        let results = []
         axios
           .get(url)
           .then((response) => {
@@ -39,8 +47,11 @@ class Form extends Component{
               groups.push(group.group_type);
               meetings.push(group.meeting_date.substring(0, 10));
               zipCodes.push(group.zip_code);
+              results.push(group);
             })
-
+            this.setState({filtered: results});
+            
+            //Keep unique values only
             campuses = Array.from(new Set(campuses));
             demographics = Array.from(new Set(demographics));
             groups = Array.from(new Set(groups));
@@ -61,101 +72,130 @@ class Form extends Component{
             this.setState({zipCode: zipCodes[0]});
           })
           .catch((err) => {
-            //console.log(err);
+            console.log(err);
           });
         
     }
-    componentDidUpdate(){
-        let selections ={
-            "campus": this.state.campus,
-            "demographic": this.state.demographic,
-            "group_type": this.state.groupType,
-            "meeting_date": this.state.meetingDate,
-            "zip_code": this.state.zipCode
-        }
-        console.log(selections);
-        let results = {} //if results is empty print no results
-        //if any value is View All it does not matter use loop instead of if
-        //pass results to component that loops over each object
-        this.state.data.map(group => {
-            let campus = group.campus;
-            let demographic = group.demographic;
-            let group_type = group.group_type;
-            let meeting_date = group.meeting_date.substring(0, 10);
-            let zip_code = group.zip_code;
-            if(campus === selections.campus &&
-                demographic === selections.demographic &&
-                group_type === selections.group_type &&
-                meeting_date === selections.meeting_date &&
-                zip_code === selections.zip_code
-                ){
-                    console.log(group);
+    componentDidUpdate(prevProps, prevState){
+        if(prevState.changed !== this.state.changed){
+            //User selections
+            let selections ={
+                "campus": this.state.campus,
+                "demographic": this.state.demographic,
+                "group_type": this.state.groupType,
+                "meeting_date": this.state.meetingDate,
+                "zip_code": this.state.zipCode
+            }
+            let results = []
+            let valid = true;
+            //Filters groups based on the selected criteria
+            this.state.data.map(group => {
+                for( const[key, value] of Object.entries(selections)){
+                    if(value === "View All"){
+                        continue;
+                    } else{
+                        if(key === "meeting_date"){
+                           if(group[key].substring(0,10) !== value.substring(0,10)){
+                                valid = false;
+                           }
+                        } else{
+                        if(group[key].toString() !== value){ //toString() because zip_code is an integer
+                            valid = false;
+                        }
+                        }
+                    }
+                    
                 }
-        })
+                if(valid){
+                    results.push(group);
+                }
+                valid = true;
+            })
+           this.setState({filtered: results});
+      
+
+        }
+    
     }
   render(){
       return(
-          <form>
-                            <p>{this.state.campus}</p>
-              <p>{this.state.demographic}</p>
-              <p>{this.state.groupType}</p>
-              <p>{this.state.meetingDate}</p>
-              <p>{this.state.zipCode}</p>
-              <label>Campus</label>
-              <select
-               name="campus"
-               value={this.state.campus}
-               onChange={this.handleChange}
-              >
-                  {this.state.campuses.map((val, i) => {
-                      return <option key={i}>{val}</option>
-                  })}
-              </select> <br />
+          <div className="row">
+               <form className="col-md-2 mb-3">
+        <div className="form-group">
+        <label>Campus</label>
+        <select
+         className="form-control"
+         name="campus"
+         value={this.state.campus}
+         onChange={this.handleChange}
+        >
+            {this.state.campuses.map((val, i) => {
+                return <option key={i}>{val}</option>
+            })}
+        </select>
 
-              <label>Demographic</label>
-              <select
-               name="demographic"
-               value={this.state.demographic}
-               onChange={this.handleChange}
-               >
-              {this.state.demographics.map((val, i) => {
-                      return <option key={i}>{val}</option>
-                  })}
-              </select> <br />
+        </div>
+        <div className="form-group">
+        <label>Demographic</label>
+        <select
+        className="form-control"
+         name="demographic"
+         value={this.state.demographic}
+         onChange={this.handleChange}
+         >
+        {this.state.demographics.map((val, i) => {
+                return <option key={i}>{val}</option>
+            })}
+        </select>
+        </div>
 
-              <label>Group Type</label>
-              <select
-               name="groupType"
-               value={this.state.groupType}
-               onChange={this.handleChange}
-              >
-              {this.state.groupTypes.map((val, i) => {
-                      return <option key={i}>{val}</option>
-                  })}
-              </select> <br />
+      <div className="form-group">
+      <label>Group Type</label>
+        <select
+        className="form-control"
+         name="groupType"
+         value={this.state.groupType}
+         onChange={this.handleChange}
+        >
+        {this.state.groupTypes.map((val, i) => {
+                return <option key={i}>{val}</option>
+            })}
+        </select>
+      </div>
 
-              <label>Meeting Date</label>
-              <select
-               name="meetingDate"
-               value={this.state.meetingDate}
-               onChange={this.handleChange}
-              >
-              {this.state.meetingDates.map((val, i) => {
-                      return <option key={i}>{val}</option>
-                  })}
-              </select> <br />
+    <div className="form-group">
+    <label>Meeting Date</label>
+        <select
+        className="form-control"
+         name="meetingDate"
+         value={this.state.meetingDate}
+         onChange={this.handleChange}
+        >
+        {this.state.meetingDates.map((val, i) => {
+                return <option key={i}>{val}</option>
+            })}
+        </select>
+    </div>
 
-              <label>Zip Code</label>
-              <select
-               name="zipCode"
-               value={this.state.zipCode}
-               onChange={this.handleChange}
-              >
-              {this.state.zipCodes.map((val, i) => {
-                      return <option key={i}>{val}</option>
-                  })}
-              </select>
-          </form>
+     <div className="form-group">
+     <label>Zip Code</label>
+        <select
+        className="form-control"
+         name="zipCode"
+         value={this.state.zipCode}
+         onChange={this.handleChange}
+        >
+        {this.state.zipCodes.map((val, i) => {
+                return <option key={i}>{val}</option>
+            })}
+        </select>
+     </div>
+    </form>
+    <div className="col-md-9 mb-3">
+    <Groups filtered={this.state.filtered}/>
+    </div>
+  </div>
+         
       );
   }
 }
