@@ -1,5 +1,5 @@
+import * as fs from "fs";
 import {ApplicationConfig, Lb4SimpleGroupsAppApplication} from './application';
-
 export * from './application';
 
 export async function main(options: ApplicationConfig = {}) {
@@ -30,6 +30,10 @@ if (require.main === module) {
         // useful when used with OpenAPI-to-GraphQL to locate your application
         setServersFromRequest: true,
       },
+       // Enable HTTPS
+       protocol: 'https',
+       key: fs.readFileSync('./key.pem'),
+       cert: fs.readFileSync('./cert.pem'),
     },
   };
   main(config).catch(err => {

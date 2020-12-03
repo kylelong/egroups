@@ -3,7 +3,7 @@
 # Groups
 
 Web app for filtering out Elevation eGroups. <br />
-API: http://159.122.174.181:31217/groups
+API: http://159.122.174.181:31217/groups <br />
 URL: https://suspicious-almeida-1d4464.netlify.app/
 
 ## Motivation
