@@ -28,6 +28,7 @@ Contains the folder responsible for the API deployed to IBM cloud using Kubernet
 Notes: <br />
 
 Further improvents: <br />
+- Make API url https so it can work on non-local host.
 - Styling
 
 ## Usage:
