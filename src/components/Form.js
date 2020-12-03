@@ -24,17 +24,15 @@ class Form extends Component{
         this.setState({[name]: value});
     }
     componentDidMount(){
-        let campuses = [];
-        let demographics = [];
-        let groups = [];
-        let meetings = [];
-        let zipCodes = [];
+        let campuses = ["View All"];
+        let demographics = ["View All"];
+        let groups = ["View All"];
+        let meetings = ["View All"];
+        let zipCodes = ["View All"];
         const url = `http://159.122.174.181:31217/groups`;
         axios
           .get(url)
           .then((response) => {
-
-              console.log(response.data);
              response.data.map((group) => {
               campuses.push(group.campus);
               demographics.push(group.demographic);
@@ -42,6 +40,7 @@ class Form extends Component{
               meetings.push(group.meeting_date.substring(0, 10));
               zipCodes.push(group.zip_code);
             })
+
             campuses = Array.from(new Set(campuses));
             demographics = Array.from(new Set(demographics));
             groups = Array.from(new Set(groups));
@@ -65,6 +64,34 @@ class Form extends Component{
             //console.log(err);
           });
         
+    }
+    componentDidUpdate(){
+        let selections ={
+            "campus": this.state.campus,
+            "demographic": this.state.demographic,
+            "group_type": this.state.groupType,
+            "meeting_date": this.state.meetingDate,
+            "zip_code": this.state.zipCode
+        }
+        console.log(selections);
+        let results = {} //if results is empty print no results
+        //if any value is View All it does not matter use loop instead of if
+        //pass results to component that loops over each object
+        this.state.data.map(group => {
+            let campus = group.campus;
+            let demographic = group.demographic;
+            let group_type = group.group_type;
+            let meeting_date = group.meeting_date.substring(0, 10);
+            let zip_code = group.zip_code;
+            if(campus === selections.campus &&
+                demographic === selections.demographic &&
+                group_type === selections.group_type &&
+                meeting_date === selections.meeting_date &&
+                zip_code === selections.zip_code
+                ){
+                    console.log(group);
+                }
+        })
     }
   render(){
       return(
